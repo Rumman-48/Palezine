@@ -186,7 +186,7 @@
     pageURLs = await discoverPages();
     if (pageURLs.length === 0) {
       document.querySelector('.wrap').innerHTML =
-        "<div style='color:#ccc;padding:1rem;text-align:center'>No pages found (expected paths: pages2/booklet2-page-001.jpg).</div>";
+        "<div style='color:#ccc;padding:1rem;text-align:center'>No pages found (expected paths: pages2/booklet2-page-1-1.jpg).</div>";
       return;
     }
     if (isSmallScreen()) mountScrollReader(); else mountFlipbook();
@@ -204,3 +204,4 @@
 
 </body>
 </html>
+
