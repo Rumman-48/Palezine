@@ -13,7 +13,9 @@
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", Roboto, sans-serif;
     color: #fff;
     min-height: 100vh;
-    display: flex; flex-direction: column; align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   header {
     position: sticky; top: 0; z-index: 5;
@@ -22,7 +24,11 @@
     backdrop-filter: blur(6px);
     border-bottom: 1px solid rgba(255,255,255,0.06);
     padding: .75rem 1rem;
-    display: flex; gap: .75rem; align-items: center; justify-content: center; flex-wrap: wrap;
+    display: flex;
+    gap: .75rem;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
   }
   .title { font-weight: 600; }
   .btn {
@@ -37,19 +43,32 @@
   }
   .btn:hover { background: rgba(255,255,255,0.1); }
 
-  .wrap { width: 100%; max-width: 900px; padding: 1rem; display: flex; justify-content: center; }
+  .wrap {
+    width: 100%;
+    max-width: 900px;
+    padding: 1rem;
+    display: flex;
+    justify-content: center;
+  }
 
+  /* Flipbook container */
   #flipbook {
-    width: 900px; height: 600px;
-    background: #1a1a1a; border-radius: 12px;
+    width: 900px;
+    height: 600px;
+    background: #1a1a1a;
+    border-radius: 12px;
     box-shadow: 0 40px 120px rgba(0,0,0,0.9);
-    overflow: hidden; display: none;
+    overflow: hidden;
+    display: none;
   }
   #flipbook .page {
-    width: 450px; height: 600px;
-    background-size: cover; background-position: center;
+    width: 450px;
+    height: 600px;
+    background-size: cover;
+    background-position: center;
   }
 
+  /* PDF reader: clean, no grey box */
   #pdfReader {
     width: 100%;
     max-width: 900px;
@@ -57,11 +76,11 @@
   }
   #pdfReader iframe {
     width: 100%;
-    height: 85vh;
+    height: 100vh;
     border: none;
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.7);
-    background: #111;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
   }
 
   footer {
@@ -74,8 +93,17 @@
   }
 
   @media (max-width: 950px) {
-    #flipbook { width: 100%; height: calc(100vw * (600/900)); }
-    #flipbook .page { width: 50%; height: 100%; }
+    #flipbook {
+      width: 100%;
+      height: calc(100vw * (600/900));
+    }
+    #flipbook .page {
+      width: 50%;
+      height: 100%;
+    }
+    #pdfReader iframe {
+      height: 100vh;
+    }
   }
 </style>
 
@@ -98,13 +126,14 @@
 
 <footer>
   If all is black wait for loading 😉...<br><br>
-  Tip: On mobile, PDF scroll mode is easiest ^^ . Switch to flip mode anytime.
+  Use scroll, touch, or arrow keys to move through the pages.<br>
+  Tip: PDF scroll mode is easiest ^^ . Switch to flip mode anytime.
 </footer>
 
 <script>
   const PDF_SRC = "booklet2.pdf";
 
-  // Image pages for flip mode (booklet2-1-1.jpg, booklet2-2-1.jpg, ...)
+  // Flip mode images: booklet2-1-1.jpg, booklet2-2-1.jpg, ...
   const FOLDER = "pages2/";
   const PREFIX = "booklet2-";
   const SUFFIX = "-1.jpg";
@@ -143,7 +172,8 @@
 
     pdfDiv.innerHTML = "";
     const iframe = document.createElement('iframe');
-    iframe.src = PDF_SRC + "#view=FitH&scrollbar=1&toolbar=1";
+    // Hide toolbar & side panels for a clean look
+    iframe.src = PDF_SRC + "#toolbar=0&navpanes=0&scrollbar=1&view=FitH";
     iframe.loading = "lazy";
     pdfDiv.appendChild(iframe);
 
@@ -167,7 +197,7 @@
     pdfDiv.style.display = 'none';
     flip.innerHTML = '';
 
-    pageURLs.forEach(src=>{
+    pageURLs.forEach(src => {
       const div = document.createElement('div');
       div.className = 'page';
       div.style.backgroundImage = `url('${src}')`;
@@ -176,27 +206,47 @@
 
     flip.style.display = 'block';
 
-    $("#flipbook").turn({
-      width: isSmallScreen() ? window.innerWidth : 900,
-      height: isSmallScreen() ? window.innerWidth * (600/900) : 600,
-      display: isSmallScreen() ? "single" : "double",
-      autoCenter: true
-    });
+    try {
+      const $flip = $("#flipbook");
+      if ($flip.data('initialized')) {
+        $flip.turn('destroy').remove();
+        const newDiv = document.createElement('div');
+        newDiv.id = 'flipbook';
+        newDiv.innerHTML = flip.innerHTML;
+        flip.parentNode.insertBefore(newDiv, flip);
+        flip.remove();
+      }
+      $("#flipbook").turn({
+        width: isSmallScreen() ? Math.min(window.innerWidth, 900) : 900,
+        height: isSmallScreen() ? Math.min(window.innerWidth, 900) * (600/900) : 600,
+        autoCenter: true,
+        elevation: 50,
+        gradients: true,
+        display: isSmallScreen() ? 'single' : 'double'
+      }).data('initialized', true);
+
+      document.onkeydown = (e)=>{
+        if (e.key === 'ArrowRight') $("#flipbook").turn("next");
+        if (e.key === 'ArrowLeft') $("#flipbook").turn("previous");
+      };
+    } catch(e){
+      console.error(e);
+    }
 
     mode = 'flip';
     document.getElementById('toggleMode').textContent = 'Switch to PDF';
   }
 
   function toggleMode(){
-    if(mode === 'flip') mountPDFReader();
+    if (mode === 'flip') mountPDFReader();
     else mountFlipbook();
   }
 
   (async function init(){
-    // Preload flip images in background
+    // Preload flip images
     pageURLs = await discoverPages();
 
-    // Default: show PDF scroll
+    // Default view: clean PDF scroll
     mountPDFReader();
 
     document.getElementById('toggleMode').addEventListener('click', toggleMode);
@@ -205,6 +255,7 @@
 
 </body>
 </html>
+
 
 
 
