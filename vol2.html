@@ -10,7 +10,7 @@
   body {
     margin: 0;
     background: radial-gradient(circle at 20% 20%, #2a2a2a 0%, #000 80%);
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", Roboto, sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", Roboto, "Helvetica Neue", sans-serif;
     color: #fff;
     min-height: 100vh;
     display: flex; flex-direction: column; align-items: center;
@@ -33,24 +33,32 @@
     border-radius: 8px;
     font-size: .85rem;
     cursor: pointer;
+    text-decoration: none;
   }
-  .btn.secondary { background: transparent; }
+  .btn:hover { background: rgba(255,255,255,0.1); }
 
   .wrap { width: 100%; max-width: 900px; padding: 1rem; display: flex; justify-content: center; }
 
   #flipbook {
-    width: 900px; height: 600px; background: #1a1a1a; border-radius: 12px;
+    width: 900px; height: 600px;
+    background: #1a1a1a; border-radius: 12px;
     box-shadow: 0 40px 120px rgba(0,0,0,0.9);
     overflow: hidden; display: none;
   }
-  #flipbook .page { width: 450px; height: 600px; background-size: cover; background-position: center; }
+  #flipbook .page {
+    width: 450px; height: 600px;
+    background-size: cover; background-position: center;
+  }
 
   #scrollReader { width: 100%; max-width: 900px; display: none; }
-  .page-img { width: 100%; margin-bottom: .75rem; border-radius: 10px; }
-
-  footer {
-    color: #aaa; font-size: .8rem; padding: 1rem; text-align: center; opacity: .8;
+  .page-img {
+    width: 100%; height: auto; display: block;
+    margin-bottom: .75rem;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
   }
+
+  footer { color: #aaa; font-size: .8rem; padding: 1rem; text-align: center; opacity: .8; }
 
   @media (max-width: 950px) {
     #flipbook { width: 100%; height: calc(100vw * (600/900)); }
@@ -66,8 +74,8 @@
 <header>
   <span class="title">PaleZine — Volume 2</span>
   <button id="toggleMode" class="btn">Switch to Flip</button>
-  <a class="btn secondary" href="booklet2.pdf" download>Download PDF</a>
-  <a class="btn secondary" href="index.html">Back to Volumes</a>
+  <a class="btn" href="booklet2.pdf" download>Download PDF</a>
+  <a class="btn" href="index.html">Back to Volumes</a>
 </header>
 
 <div class="wrap">
@@ -78,62 +86,63 @@
 <footer>Volume 2</footer>
 
 <script>
-
-  // UPDATED CONFIG FOR YOUR REAL FILENAMES:
+  // 👇👇👇 THIS IS THE KEY FIX 👇👇👇
+  // Matches filenames like: booklet2-1-1.jpg, booklet2-2-1.jpg, ...
   const FOLDER = "pages2/";
   const PREFIX = "booklet2-";
-  const SUFFIX = "-1.jpg";     // <--- IMPORTANT
+  const SUFFIX = "-1.jpg";
   const START_INDEX = 1;
   const MAX_PAGES_TO_TRY = 200;
 
   let pageURLs = [];
   let mode = null;
-  const isSmallScreen = () => window.matchMedia('(max-width: 950px)').matches;
 
-  async function imgExists(url){
-    return new Promise((resolve)=>{
+  function isSmallScreen() {
+    return window.matchMedia('(max-width: 950px)').matches;
+  }
+
+  function imgExists(url) {
+    return new Promise((resolve) => {
       const img = new Image();
-      img.onload = ()=>resolve(true);
-      img.onerror = ()=>resolve(false);
-      img.src = url + "?v=" + Date.now();
+      img.onload = () => resolve(true);
+      img.onerror = () => resolve(false);
+      img.src = url;
     });
   }
 
-  async function discoverPages(){
+  async function discoverPages() {
     const urls = [];
-    for(let i = START_INDEX; i < START_INDEX + MAX_PAGES_TO_TRY; i++){
+    for (let i = START_INDEX; i < START_INDEX + MAX_PAGES_TO_TRY; i++) {
       const url = `${FOLDER}${PREFIX}${i}${SUFFIX}`;
       const ok = await imgExists(url);
-      if(!ok) break;
+      if (!ok) break;
       urls.push(url);
     }
     return urls;
   }
 
-  // SCROLL MODE
-  function mountScrollReader(){
+  function mountScrollReader() {
     const container = document.getElementById('scrollReader');
     container.innerHTML = '';
-    pageURLs.forEach((src)=>{
+    pageURLs.forEach((src, idx) => {
       const img = document.createElement('img');
       img.className = 'page-img';
       img.src = src;
+      img.alt = `Page ${idx + 1}`;
       container.appendChild(img);
     });
     container.style.display = 'block';
     document.getElementById('flipbook').style.display = 'none';
-
-    mode = 'scroll';
     document.getElementById('toggleMode').textContent = 'Switch to Flip';
+    mode = 'scroll';
   }
 
-  // FLIPBOOK MODE
-  function mountFlipbook(){
+  function mountFlipbook() {
     const flip = document.getElementById('flipbook');
     flip.innerHTML = '';
     document.getElementById('scrollReader').style.display = 'none';
 
-    pageURLs.forEach((src)=>{
+    pageURLs.forEach((src) => {
       const div = document.createElement('div');
       div.className = 'page';
       div.style.backgroundImage = `url('${src}')`;
@@ -144,38 +153,38 @@
 
     $("#flipbook").turn({
       width: isSmallScreen() ? window.innerWidth : 900,
-      height: isSmallScreen() ? window.innerWidth * (600/900) : 600,
-      autoCenter: true,
-      display: isSmallScreen() ? 'single' : 'double'
+      height: isSmallScreen() ? window.innerWidth * (600 / 900) : 600,
+      display: isSmallScreen() ? "single" : "double",
+      autoCenter: true
     });
 
-    mode = 'flip';
     document.getElementById('toggleMode').textContent = 'Switch to Scroll';
+    mode = 'flip';
   }
 
-  function toggleMode(){
+  function toggleMode() {
     if (mode === 'flip') mountScrollReader();
     else mountFlipbook();
   }
 
-  (async function init(){
+  (async function init() {
     pageURLs = await discoverPages();
 
-    if (pageURLs.length === 0){
-      alert("No Volume 2 pages found in pages2/. Check filenames.");
+    if (pageURLs.length === 0) {
+      alert("No pages found in pages2/. Check filenames.");
       return;
     }
 
     if (isSmallScreen()) mountScrollReader();
     else mountFlipbook();
 
-    document.getElementById('toggleMode').addEventListener('click', toggleMode);
+    document.getElementById("toggleMode").addEventListener("click", toggleMode);
   })();
-
 </script>
 
 </body>
 </html>
+
 
 
 
