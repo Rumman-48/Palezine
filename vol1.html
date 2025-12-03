@@ -6,13 +6,16 @@
 <title>PaleZine - Volume 1</title>
 
 <style>
+  * { box-sizing: border-box; }
   body {
     margin: 0;
     background: radial-gradient(circle at 20% 20%, #2a2a2a 0%, #000 80%);
     font-family: system-ui, -apple-system, "Inter", sans-serif;
     color: #fff;
     min-height: 100vh;
-    display: flex; flex-direction: column; align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   header {
@@ -25,30 +28,76 @@
     display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap;
   }
 
+  .title { font-weight: 600; }
+
   .btn {
     border: 1px solid rgba(255,255,255,0.15);
     background: rgba(255,255,255,0.06);
     color: #e9f3ff;
-    padding: .45rem .7rem; border-radius: 8px;
-    font-size: .85rem; cursor: pointer; text-decoration: none;
+    padding: .45rem .7rem;
+    border-radius: 8px;
+    font-size: .85rem;
+    cursor: pointer;
+    text-decoration: none;
   }
   .btn:hover { background: rgba(255,255,255,0.1); }
 
-  .wrap { width: 100%; max-width: 900px; padding: 1rem; }
+  .wrap {
+    width: 100%;
+    max-width: 900px;
+    padding: 1rem;
+  }
 
+  /* Scroll mode */
+  #scrollReader {
+    width: 100%;
+    max-width: 900px;
+    display: none;
+  }
   #scrollReader img {
-    width: 100%; margin-bottom: 1rem;
-    border-radius: 10px;
+    width: 100%;
+    height: auto;
+    display: block;
     background: #111;
+    margin: 0 0 .75rem 0;
+    border-radius: 10px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   }
 
-  #flipbook { display:none; }
+  /* Flipbook */
+  #flipbook {
+    width: 900px;
+    height: 600px;
+    background: #1a1a1a;
+    border-radius: 12px;
+    box-shadow: 0 40px 120px rgba(0,0,0,0.9), 0 2px 4px rgba(255,255,255,0.05) inset;
+    overflow: hidden;
+    display: none;
+    margin: 0 auto;
+  }
+  #flipbook .page {
+    width: 450px;
+    height: 600px;
+    background-size: cover;
+    background-position: center;
+  }
 
   footer {
     text-align: center;
     color: #ccc;
     padding: 2rem 1rem;
+    font-size: .85rem;
+  }
+
+  @media (max-width: 950px) {
+    #flipbook {
+      width: 100%;
+      height: calc(100vw * (600/900));
+    }
+    #flipbook .page {
+      width: 50%;
+      height: 100%;
+    }
   }
 </style>
 
@@ -62,7 +111,7 @@
   <span class="title">PaleZine — Volume 1</span>
   <button id="toggleMode" class="btn">Switch to Flip</button>
   <a href="booklet.pdf" class="btn" download>Download PDF</a>
-  <a href="index.html" class="btn">Back</a>
+  <a href="index.html" class="btn">Back to Volumes</a>
 </header>
 
 <div class="wrap">
@@ -71,8 +120,8 @@
 </div>
 
 <footer>
-  If all is black, wait for loading 😉<br>
-  Tip: scroll mode is easiest on mobile.
+  If all is black, wait for loading 😉<br><br>
+  Tip: scroll mode is easiest on mobile. You can switch to flip mode anytime.
 </footer>
 
 <script>
@@ -80,84 +129,104 @@ const FOLDER = "pages/";
 const PREFIX = "booklet-page-";
 const PAD = 3;
 const EXT = ".jpg";
+const MAX_PAGES = 200;
 
 let pageURLs = [];
 let mode = "scroll";
 
-function pad(n) { return String(n).padStart(PAD, "0"); }
+function pad(num, size){ return String(num).padStart(size, "0"); }
 
-async function discoverPages() {
+function imgExists(url){
+  return new Promise((resolve)=>{
+    const img = new Image();
+    img.onload = ()=>resolve(true);
+    img.onerror = ()=>resolve(false);
+    img.src = url + (window.location.hostname.endsWith("github.io") ? "" : ("?v=" + Date.now()));
+  });
+}
+
+async function discoverPages(){
   const urls = [];
-  for (let i = 1; i < 200; i++) {
-    const url = `${FOLDER}${PREFIX}${pad(i)}${EXT}`;
-    try {
-      const res = await fetch(url);
-      if (!res.ok) break;
-      urls.push(url);
-    } catch { break; }
+  for(let i = 1; i < MAX_PAGES; i++){
+    const url = `${FOLDER}${PREFIX}${pad(i, PAD)}${EXT}`;
+    const ok = await imgExists(url);
+    if(!ok) break;
+    urls.push(url);
   }
   return urls;
 }
 
-function mountScroll() {
-  const s = document.getElementById("scrollReader");
-  const f = document.getElementById("flipbook");
+function mountScroll(){
+  const scroll = document.getElementById("scrollReader");
+  const flip = document.getElementById("flipbook");
 
-  f.style.display = "none";
-  s.style.display = "block";
-  s.innerHTML = "";
-
-  pageURLs.forEach(src => {
+  scroll.innerHTML = "";
+  pageURLs.forEach(src=>{
     const img = document.createElement("img");
     img.src = src;
-    s.appendChild(img);
+    scroll.appendChild(img);
   });
 
+  scroll.style.display = "block";
+  flip.style.display = "none";
   mode = "scroll";
   document.getElementById("toggleMode").textContent = "Switch to Flip";
 }
 
-function mountFlip() {
-  const s = document.getElementById("scrollReader");
-  const f = document.getElementById("flipbook");
+function mountFlip(){
+  const scroll = document.getElementById("scrollReader");
+  const flip = document.getElementById("flipbook");
 
-  s.style.display = "none";
-  f.style.display = "block";
+  scroll.style.display = "none";
+  flip.innerHTML = "";
 
-  f.innerHTML = "";
-  pageURLs.forEach(src => {
+  pageURLs.forEach(src=>{
     const div = document.createElement("div");
-    div.style.width = "450px";
-    div.style.height = "600px";
+    div.className = "page";
     div.style.backgroundImage = `url('${src}')`;
-    div.style.backgroundSize = "cover";
-    f.appendChild(div);
+    flip.appendChild(div);
   });
+
+  flip.style.display = "block";
+
+  // (Re)init turn.js
+  const $flip = $("#flipbook");
+  try {
+    if ($flip.data("initialized")) {
+      $flip.turn("destroy");
+    }
+  } catch(e){}
 
   $("#flipbook").turn({
     width: 900,
     height: 600,
     autoCenter: true,
-    display: "double",
-  });
+    display: window.matchMedia('(max-width: 950px)').matches ? "single" : "double"
+  }).data("initialized", true);
 
   mode = "flip";
   document.getElementById("toggleMode").textContent = "Switch to Scroll";
 }
 
-document.getElementById("toggleMode").addEventListener("click", () => {
-  if (mode === "scroll") mountFlip();
-  else mountScroll();
+document.getElementById("toggleMode").addEventListener("click", ()=>{
+  if(mode === "scroll") mountFlip(); else mountScroll();
 });
 
-(async function init() {
+(async function init(){
   pageURLs = await discoverPages();
-  mountScroll(); // default
+  if(pageURLs.length === 0){
+    document.querySelector(".wrap").innerHTML =
+      "<div style='color:#ccc;text-align:center;padding:1rem'>No pages found in <code>pages/</code>.</div>";
+    return;
+  }
+  // default = scroll mode
+  mountScroll();
 })();
 </script>
 
 </body>
 </html>
+
 
 
 
