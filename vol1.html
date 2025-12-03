@@ -6,258 +6,188 @@
 <title>PaleZine - Volume 1</title>
 
 <style>
-  * { box-sizing: border-box; }
   body {
     margin: 0;
     background: radial-gradient(circle at 20% 20%, #2a2a2a 0%, #000 80%);
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", Roboto, "Helvetica Neue", sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, Inter, sans-serif;
     color: #fff;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    overflow-x: hidden;
   }
+
   header {
-    position: sticky; top: 0; z-index: 5;
+    position: sticky; top: 0; z-index: 10;
     width: 100%;
     background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(6px);
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    padding: .75rem 1rem;
-    display: flex;
-    gap: .75rem;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
+    backdrop-filter: blur(8px);
+    padding: .75rem;
+    display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
   }
-  .title { font-weight: 600; }
+
   .btn {
-    appearance: none;
-    border: 1px solid rgba(255,255,255,0.15);
-    background: rgba(255,255,255,0.06);
-    color: #e9f3ff;
-    padding: .45rem .7rem;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: .45rem .8rem;
     border-radius: 8px;
     font-size: .85rem;
     cursor: pointer;
+    color: #fff;
     text-decoration: none;
   }
-  .btn:hover { background: rgba(255,255,255,0.1); }
-  .btn.secondary { background: transparent; }
+  .btn:hover { background: rgba(255,255,255,0.2); }
 
-  .wrap {
-    width: 100%;
-    max-width: 900px;
-    padding: 1rem;
+  /* Horizontal PDF viewer container */
+  #pdfViewer {
     display: flex;
-    justify-content: center;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 1rem;
+    padding: 1rem;
+    width: 100%;
   }
 
-  /* Flipbook container */
-  #flipbook {
-    width: 900px;
-    height: 600px;
-    background: #1a1a1a;
+  #pdfViewer canvas {
+    scroll-snap-align: center;
+    background: #111;
     border-radius: 12px;
-    box-shadow: 0 40px 120px rgba(0,0,0,0.9), 0 2px 4px rgba(255,255,255,0.05) inset;
-    overflow: hidden;
-    display: none;
-  }
-  #flipbook .page {
-    width: 450px;
-    height: 600px;
-    background-size: cover;
-    background-position: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    max-height: 90vh;
   }
 
-  /* PDF reader: clean, no grey box */
-  #pdfReader {
-    width: 100%;
-    max-width: 900px;
-    display: none;
-  }
-  #pdfReader iframe {
-    width: 100%;
-    height: 100vh;        /* fills the screen height */
-    border: none;
-    border-radius: 0;     /* no rounded frame */
-    box-shadow: none;     /* no shadow box */
-    background: transparent;
-  }
+  #flipbook { display: none; }
 
   footer {
-    color: #aaa;
-    font-size: .8rem;
-    padding: 1rem;
     text-align: center;
-    opacity: .8;
-    max-width: 900px;
-  }
-
-  @media (max-width: 950px) {
-    #flipbook {
-      width: 100%;
-      height: calc(100vw * (600/900));
-    }
-    #flipbook .page {
-      width: 50%;
-      height: 100%;
-    }
-    #pdfReader iframe {
-      height: 100vh;
-    }
+    padding: 2rem 1rem;
+    color: #ccc;
+    font-size: .85rem;
   }
 </style>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="/pdfjs/pdf.js"></script>
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.js';
+</script>
+
 <script src="https://cdn.jsdelivr.net/gh/blasten/turn.js/turn.min.js"></script>
 </head>
+
 <body>
 
 <header>
-  <span class="title">PaleZine - Volume 1</span>
   <button id="toggleMode" class="btn">Switch to Flip</button>
-  <a class="btn secondary" href="booklet.pdf" download>Download PDF</a>
-  <a class="btn secondary" href="index.html">Back to Volumes</a>
+  <a class="btn" href="booklet.pdf" download>Download PDF</a>
+  <a class="btn" href="index.html">Back</a>
 </header>
 
-<div class="wrap">
-  <div id="flipbook"></div>
-  <div id="pdfReader"></div>
-</div>
+<div id="pdfViewer"></div>
+<div id="flipbook"></div>
 
 <footer>
-  If all is black wait for loading 😉...<br><br>
-  Use scroll, touch, or arrow keys to move through the pages.<br>
-  Tip: PDF scroll mode is easiest ^^ . Switch to flip mode anytime.
+  Swipe → to change page.  
+  If all is black, wait for loading 😉  
 </footer>
 
 <script>
-  const PDF_SRC = "booklet.pdf";
+// ======= PDF MODE (default) =======
+const url = 'booklet.pdf';
 
-  // Flip mode images
-  const FOLDER = "pages/";
-  const PREFIX = "booklet-page-";
-  const PAD = 3;
-  const EXT = ".jpg";
-  const START_INDEX = 1;
-  const MAX_PAGES_TO_TRY = 200;
+async function loadPDF() {
+  const viewer = document.getElementById("pdfViewer");
+  viewer.innerHTML = "";
 
-  let pageURLs = [];
-  let mode = null;
-  const isSmallScreen = () => window.matchMedia('(max-width: 950px)').matches;
+  const pdf = await pdfjsLib.getDocument(url).promise;
 
-  function pad(num, size){ return String(num).padStart(size, "0"); }
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale: 1.7 });
 
-  function imgExists(url){
-    return new Promise((resolve)=>{
-      const img = new Image();
-      img.onload = ()=>resolve(true);
-      img.onerror = ()=>resolve(false);
-      img.src = url + (window.location.hostname.endsWith("github.io") ? "" : ("?v=" + Date.now()));
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+
+    viewer.appendChild(canvas);
+
+    page.render({
+      canvasContext: context,
+      viewport: viewport
     });
   }
+}
 
-  async function discoverPages(){
-    const urls = [];
-    for(let i = START_INDEX; i < START_INDEX + MAX_PAGES_TO_TRY; i++){
-      const url = `${FOLDER}${PREFIX}${pad(i, PAD)}${EXT}`;
-      const ok = await imgExists(url);
-      if(!ok) break;
-      urls.push(url);
-    }
-    return urls;
-  }
+// ======= FLIP MODE =======
+const FOLDER = "pages/";
+const PREFIX = "booklet-page-";
+const PAD = 3;
+const EXT = ".jpg";
+let pageURLs = [];
 
-  // ---- PDF mode (default) ----
-  function mountPDFReader(){
-    const pdfDiv = document.getElementById('pdfReader');
-    const flip = document.getElementById('flipbook');
+function pad(n, width){ return String(n).padStart(width,'0'); }
 
-    pdfDiv.innerHTML = "";
-    const iframe = document.createElement('iframe');
-    // Hide PDF toolbar & side panels so it looks clean
-    iframe.src = PDF_SRC + "#toolbar=0&navpanes=0&scrollbar=1&view=FitH";
-    iframe.loading = "lazy";
-    pdfDiv.appendChild(iframe);
-
-    pdfDiv.style.display = 'block';
-    flip.style.display = 'none';
-
-    mode = 'pdf';
-    document.getElementById('toggleMode').textContent = 'Switch to Flip';
-  }
-
-  // ---- Flip mode (uses JPGs) ----
-  function mountFlipbook(){
-    if (pageURLs.length === 0){
-      alert("Flip view is not available (no page images found).");
-      return;
-    }
-
-    const flip = document.getElementById('flipbook');
-    const pdfDiv = document.getElementById('pdfReader');
-
-    pdfDiv.style.display = 'none';
-    flip.innerHTML = '';
-
-    pageURLs.forEach((src)=>{
-      const div = document.createElement('div');
-      div.className = 'page';
-      div.style.backgroundImage = `url('${src}')`;
-      flip.appendChild(div);
-    });
-    flip.style.display = 'block';
-
+async function discoverPages(){
+  const urls = [];
+  for (let i=1; i<300; i++){
+    const u = `${FOLDER}${PREFIX}${pad(i,PAD)}${EXT}`;
     try {
-      const $flip = $("#flipbook");
-      if ($flip.data('initialized')) {
-        $flip.turn('destroy').remove();
-        const newDiv = document.createElement('div');
-        newDiv.id = 'flipbook';
-        newDiv.innerHTML = flip.innerHTML;
-        flip.parentNode.insertBefore(newDiv, flip);
-        flip.remove();
-      }
-      $("#flipbook").turn({
-        width: isSmallScreen() ? Math.min(window.innerWidth, 900) : 900,
-        height: isSmallScreen() ? Math.min(window.innerWidth, 900) * (600/900) : 600,
-        autoCenter: true,
-        elevation: 50,
-        gradients: true,
-        display: isSmallScreen() ? 'single' : 'double'
-      }).data('initialized', true);
-
-      document.onkeydown = (e)=>{
-        if (e.key === 'ArrowRight') $("#flipbook").turn("next");
-        if (e.key === 'ArrowLeft') $("#flipbook").turn("previous");
-      };
-    } catch(e){
-      console.error(e);
-    }
-
-    mode = 'flip';
-    document.getElementById('toggleMode').textContent = 'Switch to PDF';
+      const r = await fetch(u);
+      if (!r.ok) break;
+      urls.push(u);
+    } catch { break; }
   }
+  return urls;
+}
 
-  function toggleMode(){
-    if (mode === 'flip') mountPDFReader();
-    else mountFlipbook();
-  }
+function mountFlip(){
+  const viewer = document.getElementById("pdfViewer");
+  const flip = document.getElementById("flipbook");
 
-  (async function init(){
-    // Preload page images for flip mode (optional)
+  viewer.style.display = "none";
+  flip.style.display = "block";
+
+  flip.innerHTML = "";
+  pageURLs.forEach(src=>{
+    const d = document.createElement("div");
+    d.style.width="450px";
+    d.style.height="600px";
+    d.style.backgroundImage=`url('${src}')`;
+    d.style.backgroundSize="cover";
+    flip.appendChild(d);
+  });
+
+  $("#flipbook").turn({
+    width:900,
+    height:600,
+    autoCenter:true,
+    gradients:true,
+    display:"double"
+  });
+}
+
+let mode = "pdf";
+
+document.getElementById("toggleMode").addEventListener("click", async ()=>{
+  if (mode === "pdf"){
     pageURLs = await discoverPages();
+    mountFlip();
+    mode = "flip";
+    document.getElementById("toggleMode").textContent = "Switch to PDF";
+  } else {
+    document.getElementById("flipbook").style.display="none";
+    document.getElementById("pdfViewer").style.display="flex";
+    mode = "pdf";
+    document.getElementById("toggleMode").textContent = "Switch to Flip";
+  }
+});
 
-    // Default view: clean PDF scroll
-    mountPDFReader();
-
-    document.getElementById('toggleMode').addEventListener('click', toggleMode);
-  })();
+// Init
+loadPDF();
 </script>
 
 </body>
 </html>
+
+
 
 
 
