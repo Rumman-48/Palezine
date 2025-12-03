@@ -50,12 +50,18 @@
     background-size: cover; background-position: center;
   }
 
-  #scrollReader { width: 100%; max-width: 900px; display: none; }
-  .page-img {
-    width: 100%; height: auto; display: block;
-    margin-bottom: .75rem;
+  #pdfReader {
+    width: 100%;
+    max-width: 900px;
+    display: none;
+  }
+  #pdfReader iframe {
+    width: 100%;
+    height: 85vh;
+    border: none;
     border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+    background: #111;
   }
 
   footer {
@@ -87,16 +93,18 @@
 
 <div class="wrap">
   <div id="flipbook"></div>
-  <div id="scrollReader"></div>
+  <div id="pdfReader"></div>
 </div>
 
 <footer>
   If all is black wait for loading 😉...<br><br>
-  Tip: On mobile, scroll mode is easier ^^ . Switch to flip mode anytime.
+  Tip: On mobile, PDF scroll mode is easiest ^^ . Switch to flip mode anytime.
 </footer>
 
 <script>
-  // Matches: booklet2-1-1.jpg, booklet2-2-1.jpg, ..., booklet2-N-1.jpg
+  const PDF_SRC = "booklet2.pdf";
+
+  // Image pages for flip mode (booklet2-1-1.jpg, booklet2-2-1.jpg, ...)
   const FOLDER = "pages2/";
   const PREFIX = "booklet2-";
   const SUFFIX = "-1.jpg";
@@ -128,29 +136,36 @@
     return urls;
   }
 
-  function mountScrollReader(){
-    const container = document.getElementById('scrollReader');
-    container.innerHTML = '';
+  // ---- PDF mode (default) ----
+  function mountPDFReader(){
+    const pdfDiv = document.getElementById('pdfReader');
+    const flip = document.getElementById('flipbook');
 
-    pageURLs.forEach((src, idx)=>{
-      const img = document.createElement('img');
-      img.className = 'page-img';
-      img.src = src;
-      img.alt = `Page ${idx+1}`;
-      container.appendChild(img);
-    });
+    pdfDiv.innerHTML = "";
+    const iframe = document.createElement('iframe');
+    iframe.src = PDF_SRC + "#view=FitH&scrollbar=1&toolbar=1";
+    iframe.loading = "lazy";
+    pdfDiv.appendChild(iframe);
 
-    container.style.display = 'block';
-    document.getElementById('flipbook').style.display = 'none';
+    pdfDiv.style.display = 'block';
+    flip.style.display = 'none';
 
-    mode = 'scroll';
+    mode = 'pdf';
     document.getElementById('toggleMode').textContent = 'Switch to Flip';
   }
 
+  // ---- Flip mode (uses JPGs) ----
   function mountFlipbook(){
+    if (pageURLs.length === 0){
+      alert("Flip view is not available (no page images found).");
+      return;
+    }
+
     const flip = document.getElementById('flipbook');
+    const pdfDiv = document.getElementById('pdfReader');
+
+    pdfDiv.style.display = 'none';
     flip.innerHTML = '';
-    document.getElementById('scrollReader').style.display = 'none';
 
     pageURLs.forEach(src=>{
       const div = document.createElement('div');
@@ -164,29 +179,25 @@
     $("#flipbook").turn({
       width: isSmallScreen() ? window.innerWidth : 900,
       height: isSmallScreen() ? window.innerWidth * (600/900) : 600,
-      display: isSmallScreen() ? 'single' : 'double',
+      display: isSmallScreen() ? "single" : "double",
       autoCenter: true
     });
 
     mode = 'flip';
-    document.getElementById('toggleMode').textContent = 'Switch to Scroll';
+    document.getElementById('toggleMode').textContent = 'Switch to PDF';
   }
 
   function toggleMode(){
-    if(mode === 'flip') mountScrollReader();
+    if(mode === 'flip') mountPDFReader();
     else mountFlipbook();
   }
 
   (async function init(){
+    // Preload flip images in background
     pageURLs = await discoverPages();
 
-    if(pageURLs.length === 0){
-      alert("No images found for Volume 2. Check filenames in pages2/.");
-      return;
-    }
-
-    // 👇 Always start in SCROLL mode
-    mountScrollReader();
+    // Default: show PDF scroll
+    mountPDFReader();
 
     document.getElementById('toggleMode').addEventListener('click', toggleMode);
   })();
@@ -194,6 +205,7 @@
 
 </body>
 </html>
+
 
 
 
