@@ -3,38 +3,31 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PaleZine</title>
+<title>PaleZine - Rumman </title>
 
 <style>
   body {
     margin: 0;
     background: radial-gradient(circle at 20% 20%, #2a2a2a 0%, #000 80%);
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", Roboto, sans-serif;
+    font-family: system-ui, -apple-system, Inter, sans-serif;
     color: #fff;
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     padding: 2rem 1rem;
+    display: flex; flex-direction: column; align-items: center;
   }
 
-  h1 { margin-bottom: 2rem; }
+  h1 { margin-bottom: 2rem; font-size: 2rem; }
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(250px,1fr));
     gap: 2rem;
     width: 100%;
     max-width: 900px;
   }
 
-  .item {
-    text-align: center;
-    text-decoration: none;
-    color: #fff;
-    transition: transform .3s ease;
-  }
-  .item:hover { transform: scale(1.04); }
+  .item { text-align: center; text-decoration: none; color: white; }
+  .item:hover { transform: scale(1.04); transition: .3s; }
 
   .cover {
     width: 100%;
@@ -43,17 +36,9 @@
   }
 
   footer {
-    color: #bbb;
     margin-top: 2rem;
+    opacity: .6;
     font-size: .9rem;
-    opacity: .75;
-    text-align: center;
-    line-height: 1.5;
-  }
-
-  footer a {
-    color: #fff;
-    text-decoration: underline;
   }
 </style>
 </head>
@@ -64,17 +49,20 @@
 
 <div class="grid">
 
-  <!-- VOLUME 1 -->
+  <!-- Volume 1 -->
   <a href="vol1.html" class="item">
-    <img src="pages/booklet-page-001.jpg" class="cover" alt="PaleZine Vol. I">
+    <img src="pages/booklet-page-001.jpg" class="cover" alt="PaleZine Vol 1">
     <h2>Volume 1</h2>
   </a>
 
-  <!-- VOLUME 2 -->
+  <!-- Volume 2 -->
   <a href="vol2.html" class="item">
-    <img src="pages2/booklet2-1-1.jpg" class="cover" alt="PaleZine Vol. II">
+    <embed src="booklet2-1-1.jpg" class="cover" alt="PaleZine Vol 2">
     <h2>Volume 2</h2>
   </a>
+
+</div>
+
 
 </div>
 
@@ -86,6 +74,30 @@
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
 
 
 
