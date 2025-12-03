@@ -19,7 +19,7 @@
   }
 
   header {
-    position: sticky; top: 0; z-index: 10;
+    position: sticky; top: 0; z-index: 5;
     width: 100%;
     background: rgba(0,0,0,0.6);
     backdrop-filter: blur(6px);
@@ -46,7 +46,6 @@
     width: 100%;
     max-width: 900px;
     padding: 1rem;
-    position: relative;
   }
 
   /* Scroll mode */
@@ -60,18 +59,18 @@
     height: auto;
     display: block;
     background: #111;
-    margin-bottom: .75rem;
+    margin: 0 0 .75rem 0;
     border-radius: 10px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   }
 
-  /* Flipbook container */
+  /* Flipbook */
   #flipbook {
     width: 900px;
     height: 600px;
     background: #1a1a1a;
     border-radius: 12px;
-    box-shadow: 0 40px 120px rgba(0,0,0,0.9);
+    box-shadow: 0 40px 120px rgba(0,0,0,0.9), 0 2px 4px rgba(255,255,255,0.05) inset;
     overflow: hidden;
     display: none;
     margin: 0 auto;
@@ -81,23 +80,6 @@
     height: 600px;
     background-size: cover;
     background-position: center;
-  }
-
-  /* Flip hint (Option 1) */
-  #flipHint {
-    position: absolute;
-    bottom: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 4px 12px;
-    background: rgba(0,0,0,0.45);
-    border-radius: 6px;
-    font-size: 0.85rem;
-    color: #fff;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity .6s ease;
-    z-index: 20;
   }
 
   footer {
@@ -135,14 +117,11 @@
 <div class="wrap">
   <div id="scrollReader"></div>
   <div id="flipbook"></div>
-
-  <!-- FLIP HINT -->
-  <div id="flipHint">Swipe or drag to flip →</div>
 </div>
 
 <footer>
   If all is black, wait for loading 😉<br><br>
-  Tip: scroll mode is easiest on mobile.
+  Tip: scroll mode is easiest on mobile. You can switch to flip mode anytime.
 </footer>
 
 <script>
@@ -155,30 +134,26 @@ const MAX_PAGES = 200;
 let pageURLs = [];
 let mode = "scroll";
 
-function pad(n){ return String(n).padStart(PAD, "0"); }
+function pad(num, size){ return String(num).padStart(size, "0"); }
 
 function imgExists(url){
-  return new Promise(resolve => {
+  return new Promise((resolve)=>{
     const img = new Image();
     img.onload = ()=>resolve(true);
     img.onerror = ()=>resolve(false);
-    img.src = url;
+    img.src = url + (window.location.hostname.endsWith("github.io") ? "" : ("?v=" + Date.now()));
   });
 }
 
 async function discoverPages(){
   const urls = [];
-  for(let i=1; i<MAX_PAGES; i++){
-    const url = `${FOLDER}${PREFIX}${pad(i)}${EXT}`;
-    if(await imgExists(url)) urls.push(url);
-    else break;
+  for(let i = 1; i < MAX_PAGES; i++){
+    const url = `${FOLDER}${PREFIX}${pad(i, PAD)}${EXT}`;
+    const ok = await imgExists(url);
+    if(!ok) break;
+    urls.push(url);
   }
   return urls;
-}
-
-function showHint(show){
-  const hint = document.getElementById("flipHint");
-  hint.style.opacity = show ? 1 : 0;
 }
 
 function mountScroll(){
@@ -194,8 +169,6 @@ function mountScroll(){
 
   scroll.style.display = "block";
   flip.style.display = "none";
-  showHint(false);
-
   mode = "scroll";
   document.getElementById("toggleMode").textContent = "Switch to Flip";
 }
@@ -208,49 +181,46 @@ function mountFlip(){
   flip.innerHTML = "";
 
   pageURLs.forEach(src=>{
-    const d = document.createElement("div");
-    d.className = "page";
-    d.style.backgroundImage = `url('${src}')`;
-    flip.appendChild(d);
+    const div = document.createElement("div");
+    div.className = "page";
+    div.style.backgroundImage = `url('${src}')`;
+    flip.appendChild(div);
   });
 
   flip.style.display = "block";
 
-  // Reinit turn.js
-  const $f = $("#flipbook");
-  try { if ($f.data("initialized")) $f.turn("destroy"); } catch(e){}
+  // (Re)init turn.js
+  const $flip = $("#flipbook");
+  try {
+    if ($flip.data("initialized")) {
+      $flip.turn("destroy");
+    }
+  } catch(e){}
 
   $("#flipbook").turn({
     width: 900,
     height: 600,
     autoCenter: true,
-    display: window.matchMedia('(max-width:950px)').matches ? "single" : "double",
-    when: {
-      turned: function(e, page){
-        showHint(page === 1);
-      }
-    }
+    display: window.matchMedia('(max-width: 950px)').matches ? "single" : "double"
   }).data("initialized", true);
-
-  // Show hint on first load
-  showHint(true);
 
   mode = "flip";
   document.getElementById("toggleMode").textContent = "Switch to Scroll";
 }
 
 document.getElementById("toggleMode").addEventListener("click", ()=>{
-  if (mode === "scroll") mountFlip();
-  else mountScroll();
+  if(mode === "scroll") mountFlip(); else mountScroll();
 });
 
 (async function init(){
   pageURLs = await discoverPages();
-  if (pageURLs.length === 0){
-    document.querySelector(".wrap").innerHTML = "<div style='color:#ccc'>No pages found.</div>";
+  if(pageURLs.length === 0){
+    document.querySelector(".wrap").innerHTML =
+      "<div style='color:#ccc;text-align:center;padding:1rem'>No pages found in <code>pages/</code>.</div>";
     return;
   }
-  mountScroll(); // default
+  // default = scroll mode
+  mountScroll();
 })();
 </script>
 
