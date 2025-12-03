@@ -1,57 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PaleZine</title>
+
+<style>
+  body {
+    margin: 0;
+    background: radial-gradient(circle at 20% 20%, #2a2a2a 0%, #000 80%);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", Roboto, sans-serif;
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+  }
+
+  h1 { margin-bottom: 2rem; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .item {
+    text-align: center;
+    text-decoration: none;
+    color: #fff;
+    transition: transform .3s ease;
+  }
+  .item:hover { transform: scale(1.04); }
+
+  .cover {
+    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+
+  footer {
+    color: #bbb;
+    margin-top: 2rem;
+    font-size: .9rem;
+    opacity: .75;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  footer a {
+    color: #fff;
+    text-decoration: underline;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>PaleZine</h1>
+
 <div class="grid">
 
+  <!-- VOLUME 1 -->
   <a href="vol1.html" class="item">
-    <img src="pages/booklet-page-001.jpg" class="cover">
+    <img src="pages/booklet-page-001.jpg" class="cover" alt="PaleZine Vol. I">
     <h2>Volume 1</h2>
   </a>
 
+  <!-- VOLUME 2 -->
   <a href="vol2.html" class="item">
-    <img src="pages2/booklet2-1-1.jpg" class="cover">
+    <img src="pages2/booklet2-1-1.jpg" class="cover" alt="PaleZine Vol. II">
     <h2>Volume 2</h2>
   </a>
 
 </div>
 
-<!-- Instagram follow box -->
-<div style="
-  margin-top:3rem;
-  padding:1.5rem;
-  width:100%;
-  max-width:900px;
-  text-align:center;
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.15);
-  border-radius:12px;
-  box-shadow:0 20px 60px rgba(0,0,0,0.5);
-">
-  <p style="margin:0 0 .5rem 0; font-size:1.05rem; color:#f0f0f0;">
-    To come to the next poetry evening, follow us:
-  </p>
+<footer>
+  A poetry Zine of Rumman, thanks to the help of many people.<br>
+  To come to the next poetry evening, follow us on Instagram:<br>
+  <a href="https://www.instagram.com/rumman_dd/" target="_blank">@rumman_dd</a> 😉
+</footer>
 
-  <a href="https://instagram.com/YOUR_HANDLE_HERE"
-     target="_blank"
-     style="
-       display:inline-flex;
-       align-items:center;
-       gap:.5rem;
-       padding:.55rem 1rem;
-       border-radius:999px;
-       background:rgba(255,255,255,0.12);
-       border:1px solid rgba(255,255,255,0.2);
-       color:#fff;
-       font-size:1rem;
-       text-decoration:none;
-       transition:all .25s ease;
-     ">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
-         style="width:22px; height:22px; filter:invert(1); opacity:0.85;">
-    <a href="https://www.instagram.com/rumman_dd/" target="_blank">
-  @rumman_dd
-</a>
-  </a>
-</div>
+</body>
+</html>
 
-<footer>A poetry Zine of Rumman, thanks to the help of many people.</footer>
 
 
 
