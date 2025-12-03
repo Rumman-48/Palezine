@@ -80,8 +80,7 @@
 </div>
 
 <footer>
-                         If all is black wait for loading 😉...
-
+  If all is black wait for loading 😉...<br><br>
   Tip: On mobile, scroll mode is easier ^^ . Switch to flip mode anytime.
 </footer>
 
@@ -191,7 +190,9 @@
         "<div style='color:#ccc;padding:1rem;text-align:center'>No pages found (expected paths: pages/booklet-page-001.jpg).</div>";
       return;
     }
-    if (isSmallScreen()) mountScrollReader(); else mountFlipbook();
+   
+    mountScrollReader();
+
     document.getElementById('toggleMode').addEventListener('click', toggleMode);
 
     let resizeTimer;
@@ -206,5 +207,7 @@
 
 </body>
 </html>
+
+
 
 
