@@ -2,222 +2,76 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>PaleZine</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PaleZine – Volumes</title>
 
 <style>
-  * { box-sizing: border-box; }
   body {
     margin: 0;
     background: radial-gradient(circle at 20% 20%, #2a2a2a 0%, #000 80%);
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", Roboto, "Helvetica Neue", sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", Roboto, sans-serif;
     color: #fff;
     min-height: 100vh;
-    display: flex; flex-direction: column; align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
   }
-  header {
-    position: sticky; top: 0; z-index: 5;
+
+  h1 { margin-bottom: 2rem; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
     width: 100%;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(6px);
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    padding: .75rem 1rem;
-    display: flex; gap: .75rem; align-items: center; justify-content: center; flex-wrap: wrap;
-  }
-  .title { font-weight: 600; }
-  .btn {
-    appearance: none; border: 1px solid rgba(255,255,255,0.15);
-    background: rgba(255,255,255,0.06); color: #e9f3ff;
-    padding: .45rem .7rem; border-radius: 8px; font-size: .85rem; cursor: pointer;
-  }
-  .btn:hover { background: rgba(255,255,255,0.1); }
-  .btn.secondary { background: transparent; }
-
-  .wrap { width: 100%; max-width: 900px; padding: 1rem; display: flex; justify-content: center; }
-
-  /* Flipbook container (desktop) */
-  #flipbook {
-    width: 900px; height: 600px; background: #1a1a1a; border-radius: 12px;
-    box-shadow: 0 40px 120px rgba(0,0,0,0.9), 0 2px 4px rgba(255,255,255,0.05) inset;
-    overflow: hidden; display: none; /* hidden on mobile by default */
-  }
-  #flipbook .page { width: 450px; height: 600px; background-size: cover; background-position: center; }
-
-  /* Scroll reader (mobile default) */
-  #scrollReader {
-    width: 100%; max-width: 900px; display: none;
-  }
-  .page-img {
-    width: 100%; height: auto; display: block;
-    background: #111;
-    margin: 0 0 .75rem 0;
-    border-radius: 10px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    max-width: 900px;
   }
 
-  footer { color: #aaa; font-size: .8rem; padding: 1rem; text-align: center; opacity: .8; }
+  .item {
+    text-align: center;
+    text-decoration: none;
+    color: #fff;
+    transition: transform .3s ease;
+  }
+  .item:hover { transform: scale(1.04); }
 
-  /* Small screens: default to scroll, scale flipbook if toggled */
-  @media (max-width: 950px) {
-    #flipbook { width: 100%; height: calc(100vw * (600/900)); }
-    #flipbook .page { width: 50%; height: 100%; }
+  .cover {
+    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+
+  footer {
+    color: #bbb;
+    margin-top: 2rem;
+    font-size: .9rem;
+    opacity: .75;
   }
 </style>
-
-<!-- jQuery + Turn.js (only used in flip mode) -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/blasten/turn.js/turn.min.js"></script>
 </head>
+
 <body>
 
-<header>
-  <span class="title">PaleZine</span>
-  <button id="toggleMode" class="btn">Switch to Flip</button>
-  <a class="btn secondary" href="booklet.pdf" download>Download PDF</a>
-  <a id="openPDF" class="btn secondary" href="booklet.pdf" target="_blank" rel="noopener">Open PDF</a>
-</header>
+<h1>PaleZine</h1>
 
-<div class="wrap">
-  <div id="flipbook"><!-- pages injected in flip mode --></div>
-  <div id="scrollReader"><!-- pages injected in scroll mode --></div>
+<div class="grid">
+
+  <!-- VOLUME 1 -->
+  <a href="vol1.html" class="item">
+    <img src="pages/booklet-page-001.jpg" class="cover" alt="PaleZine Vol. 1 Cover">
+    <h2>Volume 1</h2>
+  </a>
+
+  <!-- VOLUME 2 -->
+  <a href="vol2.html" class="item">
+    <img src="pages2/booklet2-page-001.jpg" class="cover" alt="PaleZine Vol. 2 Cover">
+    <h2>Volume 2</h2>
+  </a>
+
 </div>
 
-<footer>
-  Tip: On mobile, use the default <em>Scroll</em> mode for easiest reading. You can switch to <em>Flip</em> anytime.
-</footer>
-
-<script>
-  // ---- CONFIG (matches your filenames) ----
-  const FOLDER = "pages/";
-  const PREFIX = "booklet-page-";
-  const PAD = 3;                // 001, 002, ...
-  const EXT = ".jpg";           // change to ".jpeg" if needed
-  const START_INDEX = 1;
-  const MAX_PAGES_TO_TRY = 200; // safety cap
-
-  // State
-  let pageURLs = [];
-  let mode = null; // 'scroll' or 'flip'
-  const isSmallScreen = () => window.matchMedia('(max-width: 950px)').matches;
-
-  function pad(num, size){ return String(num).padStart(size, "0"); }
-
-  function imgExists(url){
-    return new Promise((resolve)=>{
-      const img = new Image();
-      img.onload = ()=>resolve(true);
-      img.onerror = ()=>resolve(false);
-      img.src = url + (window.location.hostname.endsWith("github.io") ? "" : ("?v=" + Date.now()));
-    });
-  }
-
-  async function discoverPages(){
-    const urls = [];
-    for(let i = START_INDEX; i < START_INDEX + MAX_PAGES_TO_TRY; i++){
-      const url = `${FOLDER}${PREFIX}${pad(i, PAD)}${EXT}`;
-      /* eslint-disable no-await-in-loop */
-      const ok = await imgExists(url);
-      if(!ok) break;
-      urls.push(url);
-    }
-    return urls;
-  }
-
-  // -------- Scroll mode (mobile-friendly) --------
-  function mountScrollReader(){
-    const container = document.getElementById('scrollReader');
-    container.innerHTML = '';
-    pageURLs.forEach((src, idx)=>{
-      const img = document.createElement('img');
-      img.className = 'page-img';
-      img.loading = 'lazy';
-      img.alt = `Page ${idx+1}`;
-      img.src = src;
-      container.appendChild(img);
-    });
-    container.style.display = 'block';
-    document.getElementById('flipbook').style.display = 'none';
-    mode = 'scroll';
-    document.getElementById('toggleMode').textContent = 'Switch to Flip';
-  }
-
-  // -------- Flip mode (desktop) --------
-  function mountFlipbook(){
-    const flip = document.getElementById('flipbook');
-    const scroll = document.getElementById('scrollReader');
-    scroll.style.display = 'none';
-    flip.innerHTML = '';
-    pageURLs.forEach((src)=>{
-      const div = document.createElement('div');
-      div.className = 'page';
-      div.style.backgroundImage = `url('${src}')`;
-      flip.appendChild(div);
-    });
-    flip.style.display = 'block';
-
-    // Init or re-init turn.js
-    try {
-      const $flip = $("#flipbook");
-      if ($flip.data('initialized')) {
-        $flip.turn('destroy').remove();
-        const newDiv = document.createElement('div');
-        newDiv.id = 'flipbook';
-        newDiv.innerHTML = flip.innerHTML;
-        flip.parentNode.insertBefore(newDiv, flip);
-        flip.remove();
-      }
-      $("#flipbook").turn({
-        width: isSmallScreen() ? Math.min(window.innerWidth, 900) : 900,
-        height: isSmallScreen() ? Math.min(window.innerWidth, 900) * (600/900) : 600,
-        autoCenter: true,
-        elevation: 50,
-        gradients: true,
-        display: isSmallScreen() ? 'single' : 'double'  // single page on small screens
-      }).data('initialized', true);
-
-      // keyboard nav
-      document.onkeydown = (e)=>{
-        if (e.key === 'ArrowRight') $("#flipbook").turn("next");
-        if (e.key === 'ArrowLeft') $("#flipbook").turn("previous");
-      };
-    } catch(e){
-      console.error(e);
-    }
-
-    mode = 'flip';
-    document.getElementById('toggleMode').textContent = 'Switch to Scroll';
-  }
-
-  // -------- Toggle mode --------
-  function toggleMode(){
-    if (mode === 'flip') mountScrollReader(); else mountFlipbook();
-  }
-
-  // -------- Init --------
-  (async function init(){
-    pageURLs = await discoverPages();
-    if (pageURLs.length === 0) {
-      document.querySelector('.wrap').innerHTML =
-        "<div style='color:#ccc;padding:1rem;text-align:center'>No pages found. Check paths like <code>pages/booklet-page-001.jpg</code>.</div>";
-      return;
-    }
-    // Default: scroll on small screens, flip on large screens
-    if (isSmallScreen()) mountScrollReader(); else mountFlipbook();
-
-    // Toggle button
-    document.getElementById('toggleMode').addEventListener('click', toggleMode);
-
-    // Reflow on resize (e.g., rotate phone)
-    let resizeTimer;
-    window.addEventListener('resize', ()=>{
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(()=>{
-        if (mode === 'flip') mountFlipbook();
-        // scroll mode needs no reflow
-      }, 150);
-    });
-  })();
-</script>
+<footer>Choose a volume to begin reading.</footer>
 
 </body>
 </html>
