@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>PaleZine – Volume 2</title>
+
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: radial-gradient(circle at 20% 20%, #2a2a2a 0%, #000 80%);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", Roboto, "Helvetica Neue", sans-serif;
+    color: #fff;
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  header {
+    position: sticky; top: 0; z-index: 5;
+    width: 100%;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: .75rem 1rem;
+    display: flex; gap: .75rem; align-items: center; justify-content: center; flex-wrap: wrap;
+  }
+  .title { font-weight: 600; }
+  .btn {
+    appearance: none; border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.06); color: #e9f3ff;
+    padding: .45rem .7rem; border-radius: 8px; font-size: .85rem; cursor: pointer;
+  }
+  .btn:hover { background: rgba(255,255,255,0.1); }
+  .btn.secondary { background: transparent; }
+
+  .wrap { width: 100%; max-width: 900px; padding: 1rem; display: flex; justify-content: center; }
+
+  #flipbook {
+    width: 900px; height: 600px; background: #1a1a1a; border-radius: 12px;
+    box-shadow: 0 40px 120px rgba(0,0,0,0.9), 0 2px 4px rgba(255,255,255,0.05) inset;
+    overflow: hidden; display: none;
+  }
+  #flipbook .page { width: 450px; height: 600px; background-size: cover; background-position: center; }
+
+  #scrollReader {
+    width: 100%; max-width: 900px; display: none;
+  }
+  .page-img {
+    width: 100%; height: auto; display: block;
+    background: #111;
+    margin: 0 0 .75rem 0;
+    border-radius: 10px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  footer { color: #aaa; font-size: .8rem; padding: 1rem; text-align: center; opacity: .8; }
+
+  @media (max-width: 950px) {
+    #flipbook { width: 100%; height: calc(100vw * (600/900)); }
+    #flipbook .page { width: 50%; height: 100%; }
+  }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/blasten/turn.js/turn.min.js"></script>
+</head>
+<body>
+
+<header>
+  <span class="title">PaleZine — Volume 2</span>
+  <button id="toggleMode" class="btn">Switch to Flip</button>
+  <a class="btn secondary" href="booklet2.pdf" download>Download PDF</a>
+  <a id="openPDF" class="btn secondary" href="booklet2.pdf" target="_blank" rel="noopener">Open PDF</a>
+  <a class="btn secondary" href="index.html">Back to Volumes</a>
+</header>
+
+<div class="wrap">
+  <div id="flipbook"></div>
+  <div id="scrollReader"></div>
+</div>
+
+<footer>
+  Tip: On mobile, scroll mode is easier. Switch to flip mode anytime.
+</footer>
+
+<script>
+  const FOLDER = "pages2/";
+  const PREFIX = "booklet2-page-";
+  const PAD = 3;
+  const EXT = ".jpg";
+  const START_INDEX = 1;
+  const MAX_PAGES_TO_TRY = 200;
+
+  let pageURLs = [];
+  let mode = null;
+  const isSmallScreen = () => window.matchMedia('(max-width: 950px)').matches;
+
+  function pad(num, size){ return String(num).padStart(size, "0"); }
+
+  function imgExists(url){
+    return new Promise((resolve)=>{
+      const img = new Image();
+      img.onload = ()=>resolve(true);
+      img.onerror = ()=>resolve(false);
+      img.src = url + (window.location.hostname.endsWith("github.io") ? "" : ("?v=" + Date.now()));
+    });
+  }
+
+  async function discoverPages(){
+    const urls = [];
+    for(let i = START_INDEX; i < START_INDEX + MAX_PAGES_TO_TRY; i++){
+      const url = `${FOLDER}${PREFIX}${pad(i, PAD)}${EXT}`;
+      const ok = await imgExists(url);
+      if(!ok) break;
+      urls.push(url);
+    }
+    return urls;
+  }
+
+  function mountScrollReader(){
+    const container = document.getElementById('scrollReader');
+    container.innerHTML = '';
+    pageURLs.forEach((src, idx)=>{
+      const img = document.createElement('img');
+      img.className = 'page-img';
+      img.loading = 'lazy';
+      img.alt = `Page ${idx+1}`;
+      img.src = src;
+      container.appendChild(img);
+    });
+    container.style.display = 'block';
+    document.getElementById('flipbook').style.display = 'none';
+    mode = 'scroll';
+    document.getElementById('toggleMode').textContent = 'Switch to Flip';
+  }
+
+  function mountFlipbook(){
+    const flip = document.getElementById('flipbook');
+    const scroll = document.getElementById('scrollReader');
+    scroll.style.display = 'none';
+    flip.innerHTML = '';
+    pageURLs.forEach((src)=>{
+      const div = document.createElement('div');
+      div.className = 'page';
+      div.style.backgroundImage = `url('${src}')`;
+      flip.appendChild(div);
+    });
+    flip.style.display = 'block';
+
+    try {
+      const $flip = $("#flipbook");
+      if ($flip.data('initialized')) {
+        $flip.turn('destroy').remove();
+        const newDiv = document.createElement('div');
+        newDiv.id = 'flipbook';
+        newDiv.innerHTML = flip.innerHTML;
+        flip.parentNode.insertBefore(newDiv, flip);
+        flip.remove();
+      }
+      $("#flipbook").turn({
+        width: isSmallScreen() ? Math.min(window.innerWidth, 900) : 900,
+        height: isSmallScreen() ? Math.min(window.innerWidth, 900) * (600/900) : 600,
+        autoCenter: true,
+        elevation: 50,
+        gradients: true,
+        display: isSmallScreen() ? 'single' : 'double'
+      }).data('initialized', true);
+
+      document.onkeydown = (e)=>{
+        if (e.key === 'ArrowRight') $("#flipbook").turn("next");
+        if (e.key === 'ArrowLeft') $("#flipbook").turn("previous");
+      };
+    } catch(e){
+      console.error(e);
+    }
+
+    mode = 'flip';
+    document.getElementById('toggleMode').textContent = 'Switch to Scroll';
+  }
+
+  function toggleMode(){
+    if (mode === 'flip') mountScrollReader(); else mountFlipbook();
+  }
+
+  (async function init(){
+    pageURLs = await discoverPages();
+    if (pageURLs.length === 0) {
+      document.querySelector('.wrap').innerHTML =
+        "<div style='color:#ccc;padding:1rem;text-align:center'>No pages found (expected paths: pages2/booklet2-page-001.jpg).</div>";
+      return;
+    }
+    if (isSmallScreen()) mountScrollReader(); else mountFlipbook();
+    document.getElementById('toggleMode').addEventListener('click', toggleMode);
+
+    let resizeTimer;
+    window.addEventListener('resize', ()=>{
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(()=>{
+        if (mode === 'flip') mountFlipbook();
+      }, 150);
+    });
+  })();
+</script>
+
+</body>
+</html>
