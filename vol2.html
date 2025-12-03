@@ -96,13 +96,12 @@
 </footer>
 
 <script>
-  // --- CORRECT FILENAME PATTERN FOR YOUR IMAGES ---
-  // Matches: booklet2-1-1.jpg, booklet2-2-1.jpg, ..., booklet2-16-1.jpg
+  // Matches: booklet2-1-1.jpg, booklet2-2-1.jpg, ..., booklet2-N-1.jpg
   const FOLDER = "pages2/";
   const PREFIX = "booklet2-";
   const SUFFIX = "-1.jpg";
   const START_INDEX = 1;
-  const MAX_PAGES_TO_TRY = 300; // safe cap
+  const MAX_PAGES_TO_TRY = 300;
 
   let pageURLs = [];
   let mode = null;
@@ -118,7 +117,6 @@
     });
   }
 
-  // Find all existing pages
   async function discoverPages(){
     const urls = [];
     for(let i = START_INDEX; i < START_INDEX + MAX_PAGES_TO_TRY; i++){
@@ -130,7 +128,6 @@
     return urls;
   }
 
-  // -------- Scroll mode --------
   function mountScrollReader(){
     const container = document.getElementById('scrollReader');
     container.innerHTML = '';
@@ -150,7 +147,6 @@
     document.getElementById('toggleMode').textContent = 'Switch to Flip';
   }
 
-  // -------- Flip mode --------
   function mountFlipbook(){
     const flip = document.getElementById('flipbook');
     flip.innerHTML = '';
@@ -181,7 +177,6 @@
     else mountFlipbook();
   }
 
-  // -------- Initialization --------
   (async function init(){
     pageURLs = await discoverPages();
 
@@ -190,8 +185,8 @@
       return;
     }
 
-    if(isSmallScreen()) mountScrollReader();
-    else mountFlipbook();
+    // 👇 Always start in SCROLL mode
+    mountScrollReader();
 
     document.getElementById('toggleMode').addEventListener('click', toggleMode);
   })();
@@ -199,6 +194,8 @@
 
 </body>
 </html>
+
+
 
 
 
