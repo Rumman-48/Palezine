@@ -10,28 +10,22 @@
 
 <style>
   body {
-  margin: 0;
-  background: radial-gradient(circle at 20% 20%, #2a2a2a 0%, #000 80%);
-  font-family: system-ui, -apple-system, Inter, sans-serif;
-  color: #fff;
-  min-height: 100vh;
-  padding: 2rem 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  /* Custom Camel Cursor */
-  cursor: url("camel_cursor.svg") 16 16, auto;
-}
-  h1 {
-    margin-bottom: 1rem;
-    font-size: 2rem;
+    margin: 0;
+    background: radial-gradient(circle at 20% 20%, #2a2a2a 0%, #000 80%);
+    font-family: system-ui, -apple-system, Inter, sans-serif;
+    color: #fff;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: url("camel_cursor.svg") 16 16, auto;  /* 🐪 GLOBAL CAMEL CURSOR */
   }
 
-  /* Intro section (formerly footer text) */
+  h1 { margin-bottom: 1rem; font-size: 2rem; }
+
   .intro {
     opacity: .8;
-    font-size: .9rem;
     text-align: center;
     max-width: 600px;
     margin-bottom: 2rem;
@@ -46,15 +40,8 @@
     max-width: 900px;
   }
 
-  .item {
-    text-align: center;
-    text-decoration: none;
-    color: white;
-  }
-  .item:hover {
-    transform: scale(1.04);
-    transition: .3s;
-  }
+  .item { text-align: center; text-decoration: none; color: white; }
+  .item:hover { transform: scale(1.04); transition: .3s; }
 
   .cover {
     width: 100%;
@@ -62,23 +49,15 @@
     box-shadow: 0 20px 60px rgba(0,0,0,0.6);
   }
 
-  /* Instagram link styling */
   .ig-link {
     color: #ffffff;
     font-family: "Courier New", monospace;
     text-decoration: none;
     border-bottom: 1px solid #aaaaaa;
     padding-bottom: 2px;
-    text-shadow: 0 0 4px rgba(255, 255, 255, 0.25);
-    transition: border-bottom-color .2s ease, text-shadow .2s ease;
-  }
-
-  .ig-link:hover {
-    border-bottom-color: #ffffff;
-    text-shadow: 0 0 6px rgba(255, 255, 255, 0.45);
+    text-shadow: 0 0 4px rgba(255,255,255,0.25);
   }
 </style>
-
 </head>
 
 <body>
@@ -92,19 +71,13 @@
 </div>
 
 <div class="grid">
-
-  <!-- Volume 2 -->
   <a href="vol2.html" class="item">
-    <img src="pages2/booklet2-1-1.jpg" class="cover" alt="PaleZine Vol 2">
-    <h2>Volume 2</h2>
-  </a>
-  
-  <!-- Volume 1 -->
-  <a href="vol1.html" class="item">
-    <img src="pages/booklet-page-001.jpg" class="cover" alt="PaleZine Vol 1">
-    <h2>Volume 1</h2>
+    <img src="pages2/booklet2-1-1.jpg" class="cover"><h2>Volume 2</h2>
   </a>
 
+  <a href="vol1.html" class="item">
+    <img src="pages/booklet-page-001.jpg" class="cover"><h2>Volume 1</h2>
+  </a>
 </div>
 
 </body>
@@ -131,6 +104,7 @@
 
 
   
+
 
 
 
