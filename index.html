@@ -5,9 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>PaleZine - Rumman</title>
 
-<!-- Favicon -->
+<!-- Correct favicon -->
 <link rel="icon" type="image/png" href="favicon.png">
-<link rel="icon" type="image/svg" href="favicon.svg">
 
 <style>
   body {
@@ -21,8 +20,8 @@
     flex-direction: column;
     align-items: center;
 
-    /* GLOBAL CAMEL CURSOR */
-    cursor: url("camel_cursor.png") 16 16, auto;
+    /* GLOBAL CAMEL CURSOR — PNG first, auto fallback */
+    cursor: url("camel_cursor.png") 4 4, auto;
   }
 
   h1 { margin-bottom: 1rem; font-size: 2rem; }
@@ -54,7 +53,6 @@
 
   .ig-link {
     color: #ffffff;
-    font-family: "Courier New", monospace;
     text-decoration: none;
     border-bottom: 1px solid #aaaaaa;
     padding-bottom: 2px;
@@ -84,7 +82,6 @@
 
 </body>
 </html>
-
 
 
 
