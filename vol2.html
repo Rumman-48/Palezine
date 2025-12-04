@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>PaleZine - Volume 2</title>
+<title>PaleZine – Volume 2</title>
 
 <style>
   * { box-sizing: border-box; }
@@ -16,10 +16,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    cursor: url("camel_cursor.svg") 16 16, auto;
   }
 
   header {
-    position: sticky; top: 0; z-index: 10;
+    position: sticky; top: 0; z-index: 5;
     width: 100%;
     background: rgba(0,0,0,0.6);
     backdrop-filter: blur(6px);
@@ -40,13 +41,11 @@
     cursor: pointer;
     text-decoration: none;
   }
-  .btn:hover { background: rgba(255,255,255,0.1); }
 
   .wrap {
     width: 100%;
     max-width: 900px;
     padding: 1rem;
-    position: relative;
   }
 
   /* Scroll mode */
@@ -65,7 +64,7 @@
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   }
 
-  /* Flipbook container */
+  /* Flipbook */
   #flipbook {
     width: 900px;
     height: 600px;
@@ -83,29 +82,25 @@
     background-position: center;
   }
 
-  /* ⭐ Pre-fold effect for the first page */
+  /* ⭐ NEW — Tucked effect on first page */
   #flipbook .page:first-child {
-    transform-origin: right top;
-    transform: rotateY(-12deg) translateX(-8px);
-    box-shadow: -20px 0 40px rgba(0,0,0,0.4);
+    transform-origin: top right;
+    transform: rotateY(-10deg) translateX(-6px);
+    box-shadow: -15px 0 30px rgba(0,0,0,0.4);
   }
 
-  /* Flip hint */
-  #flipHint {
+  /* ⭐ OPTIONAL tiny drag hint (DISABLED by default) */
+  /*
+  #dragHint {
     position: absolute;
-    bottom: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 4px 12px;
-    background: rgba(0,0,0,0.45);
-    border-radius: 6px;
-    font-size: 0.85rem;
+    top: 8px;
+    right: 12px;
     color: #fff;
+    font-size: 0.75rem;
+    opacity: 0.6;
     pointer-events: none;
-    opacity: 0;
-    transition: opacity .6s ease;
-    z-index: 20;
   }
+  */
 
   footer {
     text-align: center;
@@ -143,8 +138,8 @@
   <div id="scrollReader"></div>
   <div id="flipbook"></div>
 
-  <!-- FLIP HINT -->
-  <div id="flipHint">Swipe or drag to flip →</div>
+  <!-- ⭐ OPTIONAL: drag hint -->
+  <!-- <div id="dragHint">⇱ drag</div> -->
 </div>
 
 <footer>
@@ -155,37 +150,29 @@
 <script>
 const FOLDER = "pages2/";
 const PREFIX = "booklet2-";
-const PAD = 1; // volume 2 filenames have no leading zeros
-const EXT = ".jpg";
-const MAX_PAGES = 200;
+const SUFFIX = "-1.jpg";
+const MAX_PAGES = 300;
 
 let pageURLs = [];
 let mode = "scroll";
 
-function pad(n){ return String(n).padStart(PAD, "0"); }
-
 function imgExists(url){
-  return new Promise(resolve => {
+  return new Promise(resolve=>{
     const img = new Image();
     img.onload = ()=>resolve(true);
     img.onerror = ()=>resolve(false);
-    img.src = url;
+    img.src = url + (window.location.hostname.endsWith("github.io") ? "" : ("?v=" + Date.now()));
   });
 }
 
 async function discoverPages(){
   const urls = [];
-  for(let i=1; i<MAX_PAGES; i++){
-    const url = `${FOLDER}${PREFIX}${i}${EXT}`;
+  for(let i = 1; i < MAX_PAGES; i++){
+    const url = `${FOLDER}${PREFIX}${i}${SUFFIX}`;
     if(await imgExists(url)) urls.push(url);
     else break;
   }
   return urls;
-}
-
-function showHint(show){
-  const hint = document.getElementById("flipHint");
-  hint.style.opacity = show ? 1 : 0;
 }
 
 function mountScroll(){
@@ -193,15 +180,14 @@ function mountScroll(){
   const flip = document.getElementById("flipbook");
 
   scroll.innerHTML = "";
+  scroll.style.display = "block";
+  flip.style.display = "none";
+
   pageURLs.forEach(src=>{
     const img = document.createElement("img");
     img.src = src;
     scroll.appendChild(img);
   });
-
-  scroll.style.display = "block";
-  flip.style.display = "none";
-  showHint(false);
 
   mode = "scroll";
   document.getElementById("toggleMode").textContent = "Switch to Flip";
@@ -215,15 +201,25 @@ function mountFlip(){
   flip.innerHTML = "";
 
   pageURLs.forEach(src=>{
-    const d = document.createElement("div");
-    d.className = "page";
-    d.style.backgroundImage = `url('${src}')`;
-    flip.appendChild(d);
+    const div = document.createElement("div");
+    div.className = "page";
+    div.style.backgroundImage = `url('${src}')`;
+    flip.appendChild(div);
   });
 
   flip.style.display = "block";
 
-  // ⭐ Remove the pre-fold after flipbook becomes active
+  const $flip = $("#flipbook");
+  try { if ($flip.data("initialized")) $flip.turn("destroy"); } catch(e){}
+
+  $("#flipbook").turn({
+    width: 900,
+    height: 600,
+    autoCenter: true,
+    display: window.matchMedia('(max-width: 950px)').matches ? "single" : "double"
+  }).data("initialized", true);
+
+  /* ⭐ NEW — remove the tuck after flipbook initializes */
   setTimeout(() => {
     const firstPage = document.querySelector("#flipbook .page:first-child");
     if (firstPage) {
@@ -232,37 +228,20 @@ function mountFlip(){
     }
   }, 600);
 
-  // Initialize Flipbook
-  const $f = $("#flipbook");
-  try { if ($f.data("initialized")) $f.turn("destroy"); } catch(e){}
-
-  $("#flipbook").turn({
-    width: 900,
-    height: 600,
-    autoCenter: true,
-    display: window.matchMedia('(max-width:950px)').matches ? "single" : "double",
-    when: {
-      turned: function(e, page){
-        showHint(page === 1);
-      }
-    }
-  }).data("initialized", true);
-
-  showHint(true);
-
   mode = "flip";
   document.getElementById("toggleMode").textContent = "Switch to Scroll";
 }
 
 document.getElementById("toggleMode").addEventListener("click", ()=>{
-  if (mode === "scroll") mountFlip();
+  if(mode === "scroll") mountFlip();
   else mountScroll();
 });
 
 (async function init(){
   pageURLs = await discoverPages();
-  if (pageURLs.length === 0){
-    document.querySelector(".wrap").innerHTML = "<div style='color:#ccc'>No pages found.</div>";
+  if(pageURLs.length === 0){
+    document.querySelector(".wrap").innerHTML =
+      "<div style='color:#ccc;text-align:center;padding:1rem'>No pages found.</div>";
     return;
   }
   mountScroll(); // default
@@ -271,6 +250,7 @@ document.getElementById("toggleMode").addEventListener("click", ()=>{
 
 </body>
 </html>
+
 
 
 
