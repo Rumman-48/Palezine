@@ -29,10 +29,10 @@
   }
 
   .btn {
-    border: 1px solid rgba(255,255,255,0.2);
     padding: .45rem .7rem;
     border-radius: 8px;
-    background: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
     color: white;
     text-decoration: none;
     cursor: inherit;
@@ -42,7 +42,7 @@
 
   #scrollReader img {
     width: 100%;
-    margin: 0 0 .75rem 0;
+    margin-bottom: .75rem;
     border-radius: 10px;
     background: #111;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
@@ -67,52 +67,58 @@
     position: relative;
   }
 
-  /* ⭐ DOG EAR — only page 1, only before flip */
-  .page:first-child .dogear {
+  /* ⭐ Small floating arrow indicator */
+  #flipArrow {
     position: absolute;
-    top: 0; right: 0;
-    width: 0; height: 0;
-    border-top: 70px solid rgba(255,255,255,0.85);
-    border-left: 70px solid transparent;
-    box-shadow: -3px 3px 10px rgba(0,0,0,0.5);
-    z-index: 50;
+    top: 8px;
+    right: 8px;
+    font-size: 16px;
+    opacity: 0.7;
+    pointer-events: none;
+    z-index: 9999;
+    display: none;
   }
 
+  @media (max-width:950px){
+    #flipbook { width:100%; height:calc(100vw*(600/900)); }
+    .page { width:50%; height:100%; }
+  }
 </style>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/blasten/turn.js/turn.min.js"></script>
-</head>
 
+</head>
 <body>
 
 <header>
   <span>PaleZine — Volume 1</span>
   <button id="toggleMode" class="btn">Switch to Flip</button>
-  <a href="booklet.pdf" class="btn">Download PDF</a>
+  <a href="booklet.pdf" class="btn" download>Download PDF</a>
   <a href="index.html" class="btn">Back</a>
 </header>
 
 <div class="wrap">
+  <div id="flipArrow">↱</div>
   <div id="scrollReader"></div>
   <div id="flipbook"></div>
 </div>
 
 <script>
-const folder = "pages/";
-const prefix = "booklet-page-";
-const ext = ".jpg";
-const pad = 3;
-const maxPages = 200;
+const folder="pages/";
+const prefix="booklet-page-";
+const ext=".jpg";
+const pad=3;
+const max=200;
 
-let pages = [];
-let mode = "scroll";
+let pages=[];
+let mode="scroll";
 
 function padNum(n){ return String(n).padStart(pad,"0"); }
 
 async function discover(){
   const arr=[];
-  for(let i=1;i<maxPages;i++){
+  for(let i=1;i<max;i++){
     const url=`${folder}${prefix}${padNum(i)}${ext}`;
     const img=new Image();
     img.src=url;
@@ -124,6 +130,7 @@ async function discover(){
 }
 
 function showScroll(){
+  document.getElementById("flipArrow").style.display="none";
   const s=document.getElementById("scrollReader");
   const f=document.getElementById("flipbook");
 
@@ -147,38 +154,35 @@ function showFlip(){
   s.style.display="none";
   f.innerHTML="";
 
-  pages.forEach((src,i)=>{
+  pages.forEach(src=>{
     const p=document.createElement("div");
     p.className="page";
     p.style.backgroundImage=`url(${src})`;
-
-    if(i===0){
-      const dog=document.createElement("div");
-      dog.className="dogear";
-      p.appendChild(dog);
-    }
-
     f.appendChild(p);
   });
 
   f.style.display="block";
 
-  const fb = $("#flipbook");
+  const fb=$("#flipbook");
   try{ if(fb.data("init")) fb.turn("destroy"); }catch(e){}
 
   fb.turn({
     width:900,
     height:600,
     autoCenter:true,
-    display: window.innerWidth<950 ? "single" : "double",
+    display: window.innerWidth < 950 ? "single" : "double",
     when: {
       turning: function(){
-        document.querySelector(".dogear")?.remove();
+        document.getElementById("flipArrow").style.display="none";
       }
     }
   });
 
   fb.data("init",true);
+
+  /* Show arrow indicator only on page 1 */
+  document.getElementById("flipArrow").style.display="block";
+
   mode="flip";
   toggleMode.textContent="Switch to Scroll";
 }
