@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PaleZine - Rumman </title>
+<title>PaleZine - Rumman</title>
 
 <style>
   body {
@@ -13,10 +13,15 @@
     color: #fff;
     min-height: 100vh;
     padding: 2rem 1rem;
-    display: flex; flex-direction: column; align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
-  h1 { margin-bottom: 2rem; font-size: 2rem; }
+  h1 {
+    margin-bottom: 2rem;
+    font-size: 2rem;
+  }
 
   .grid {
     display: grid;
@@ -26,8 +31,15 @@
     max-width: 900px;
   }
 
-  .item { text-align: center; text-decoration: none; color: white; }
-  .item:hover { transform: scale(1.04); transition: .3s; }
+  .item {
+    text-align: center;
+    text-decoration: none;
+    color: white;
+  }
+  .item:hover {
+    transform: scale(1.04);
+    transition: .3s;
+  }
 
   .cover {
     width: 100%;
@@ -39,8 +51,26 @@
     margin-top: 2rem;
     opacity: .6;
     font-size: .9rem;
+    text-align: center;
+  }
+
+  /* --- Instagram Link Styling (Option 3) --- */
+  .ig-link {
+    color: #ffffff;
+    font-family: "Courier New", monospace;
+    text-decoration: none;
+    border-bottom: 1px solid #aaaaaa;
+    padding-bottom: 2px;
+    text-shadow: 0 0 4px rgba(255, 255, 255, 0.25);
+    transition: border-bottom-color .2s ease, text-shadow .2s ease;
+  }
+
+  .ig-link:hover {
+    border-bottom-color: #ffffff;
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.45);
   }
 </style>
+
 </head>
 
 <body>
@@ -61,17 +91,12 @@
     <h2>Volume 1</h2>
   </a>
 
-
-</div>
-
-
 </div>
 
 <footer>
-  A poetry Zine of Rumman, thanks to the help of many people.<br>
-  
-  To come to the next poetry evening stay updated here :<br> <a href="https://www.instagram.com/rumman_dd/" target="_blank">@rumman_dd</a> 😉
-
+  A poetry Zine of Rumman, thanks to the help of many people.<br><br>
+  To come to the next poetry evening stay updated here :<br>
+  <a class="ig-link" href="https://www.instagram.com/rumman_dd/" target="_blank">@rumman_dd</a> 😉
 </footer>
 
 </body>
@@ -97,7 +122,9 @@
 
 
 
+
   
+
 
 
 
