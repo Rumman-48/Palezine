@@ -83,7 +83,14 @@
     background-position: center;
   }
 
-  /* Flip hint (Option 1) */
+  /* ⭐ NEW: Pre-fold effect for the first page */
+  #flipbook .page:first-child {
+    transform-origin: right top;
+    transform: rotateY(-12deg) translateX(-8px);
+    box-shadow: -20px 0 40px rgba(0,0,0,0.4);
+  }
+
+  /* Flip hint */
   #flipHint {
     position: absolute;
     bottom: 12px;
@@ -216,7 +223,16 @@ function mountFlip(){
 
   flip.style.display = "block";
 
-  // Reinit turn.js
+  // ⭐ Remove pre-fold once turn.js takes over
+  setTimeout(() => {
+    const firstPage = document.querySelector("#flipbook .page:first-child");
+    if (firstPage) {
+      firstPage.style.transform = "";
+      firstPage.style.boxShadow = "";
+    }
+  }, 600);
+
+  // Initialize Flipbook
   const $f = $("#flipbook");
   try { if ($f.data("initialized")) $f.turn("destroy"); } catch(e){}
 
@@ -232,7 +248,6 @@ function mountFlip(){
     }
   }).data("initialized", true);
 
-  // Show hint on first load
   showHint(true);
 
   mode = "flip";
@@ -250,30 +265,12 @@ document.getElementById("toggleMode").addEventListener("click", ()=>{
     document.querySelector(".wrap").innerHTML = "<div style='color:#ccc'>No pages found.</div>";
     return;
   }
-  mountScroll(); // default
+  mountScroll(); // default view
 })();
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
